@@ -67,17 +67,15 @@ func main() {
 	for _, model := range modelsPtr.Models {
 
 		status := symbols[0]
-		// fmt.Printf("Name: %s, Model: %s, ModifiedAt: %s, Size: %d, Digest: %.12s\n",
-		// model.Name, model.Model, model.ModifiedAt.Format(time.RFC3339), model.Size, model.Digest)
 
 		// Get details from web page by model name
-		myOllama := scraper.NewOllamaWeb(model.Name)
-		myOllama.GetModelInfo()
+		ow := scraper.NewOllamaWeb(model.Name)
+		ow.GetModelInfo()
 
 		// Compare ID and last modified date
 		days := datetools.DaysDifference(model.ModifiedAt, time.Now())
 		digest := model.Digest[:12]
-		if (days > myOllama.Days) || (digest != myOllama.Digest) {
+		if (days > ow.Days) || (digest != ow.Digest) {
 			status = symbols[1] // update found
 		}
 		// fmt.Printf("Details: %+v\n\n", model.Details)
@@ -86,6 +84,6 @@ func main() {
 		list = append(list, entry)
 	}
 
-	fmt.Println("OllaMan - the Ollama Update Manager")
+	fmt.Println("OllaMan - the Ollama Model Manager")
 	fmt.Println("\n" + markdown.MarkdownTable(list))
 }

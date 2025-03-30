@@ -4,21 +4,23 @@ import (
 	"fmt"
 )
 
-// FormatBytes wandelt eine Größe in Bytes in eine lesbare Form um
+// FormatBytes converts a value of bytes into a readable output
+// Uses decimal prefixes (KB, MB, GB...) with base 1000
 func FormatBytes(bytes int64) string {
 	const unit = 1000
+
 	if bytes < unit {
-		return fmt.Sprintf("%dB", bytes) // Weniger als 1KB → einfach "X B"
+		return fmt.Sprintf("%d B", bytes)
 	}
 
-	sizes := []string{"", "KB", "MB", "GB", "TB", "PB", "EB"}
-	sizeIndex := 0
-	value := float64(bytes)
+	units := []string{"KB", "MB", "GB", "TB", "PB", "EB"}
+	size := float64(bytes) / unit
+	unitIndex := 0
 
-	for value >= unit && sizeIndex < len(sizes)-1 {
-		value /= unit
-		sizeIndex++
+	for size >= unit && unitIndex < len(units)-1 {
+		size /= unit
+		unitIndex++
 	}
 
-	return fmt.Sprintf("%.1f %s", value, sizes[sizeIndex])
+	return fmt.Sprintf("%.1f %s", size, units[unitIndex])
 }

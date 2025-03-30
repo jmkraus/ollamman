@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
+	"github.com/spf13/pflag"
 	"log"
 	"ollaman/datetools"
 	"ollaman/formatbytes"
@@ -15,16 +15,19 @@ import (
 	"github.com/ollama/ollama/api"
 )
 
+var sortByDate = pflag.BoolP("order-date", "d", false, "Sort by date (oldest first)")
+var sortByName = pflag.BoolP("order-name", "n", false, "Sort alphabetically by name")
+
 func main() {
 
-	// 1. Update verfügbar:
-	//   		- 🔶 Orangefarbene Raute: `\U0001F536`
+	// 1. Update available:
+	//    - 🔶 : `\U0001F536`
 	//
-	// 2. Datei nicht mehr gefunden:
-	//   		- ❌ Rotes Kreuz: `\U0000274C`
+	// 2. Model not found:
+	//    - ❌ : `\U0000274C`
 	//
-	// 3. Neueste Version (Ihr bereits gewähltes):
-	//   		- ✅ Weißer Haken auf grünem Hintergrund: `\U00002705`
+	// 3. Is already latest version:
+	//    - ✅ : `\U00002705`
 
 	symbols := []string{"  \U00002705", "  \U0001F536", "  \U0000274C"}
 	list := [][]string{
@@ -32,9 +35,7 @@ func main() {
 	}
 
 	// Initialize flag
-	sortByName := flag.Bool("on", false, "Sort by name")
-	sortByDate := flag.Bool("od", false, "Sort by date")
-	flag.Parse()
+	pflag.Parse()
 
 	ctx := context.Background()
 	client, err := api.ClientFromEnvironment()
@@ -51,13 +52,11 @@ func main() {
 	}
 
 	if *sortByName {
-		// Sortieren nach Name
 		sort.Slice(modelsPtr.Models, func(i, j int) bool {
 			return modelsPtr.Models[i].Name < modelsPtr.Models[j].Name
 		})
 	}
 
-	// Falls das Flag gesetzt ist, nach Datum sortieren
 	if *sortByDate {
 		sort.Slice(modelsPtr.Models, func(i, j int) bool {
 			return modelsPtr.Models[i].ModifiedAt.Before(modelsPtr.Models[j].ModifiedAt)

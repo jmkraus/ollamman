@@ -6,9 +6,6 @@ import (
 	"time"
 )
 
-// ParseRelativeDate parst einen relativen Datumsstring wie "Updated 2 days ago"
-// und gibt ein time.Time-Objekt zurück.
-// Verarbeitet Tage, Wochen und Monate.
 func ParseRelativeDate(dateString string) (time.Time, bool) {
 	patterns := map[string]string{
 		"days":   `(\d+)\s+days?\s+ago`,
@@ -42,22 +39,18 @@ func ParseRelativeDate(dateString string) (time.Time, bool) {
 		}
 	}
 
-	return time.Time{}, false // Kein passendes Muster gefunden
+	return time.Time{}, false
 }
 
-// DaysDifference berechnet die Differenz in Tagen zwischen zwei Zeitpunkten,
-// wobei die Uhrzeitkomponente ignoriert wird.
-// Es werden nur die Datumsteile (Jahr, Monat, Tag) berücksichtigt.
 func DaysDifference(date1, date2 time.Time) int16 {
-	// Normalisiere die Zeitpunkte, um nur das Datum (Jahr, Monat, Tag) zu behalten
-	// und die Uhrzeitkomponente zu eliminieren
+	// Narmalizing input (removing time)
 	normalizedDate1 := time.Date(date1.Year(), date1.Month(), date1.Day(), 0, 0, 0, 0, time.UTC)
 	normalizedDate2 := time.Date(date2.Year(), date2.Month(), date2.Day(), 0, 0, 0, 0, time.UTC)
 
-	// Berechne die Differenz zwischen den normalisierten Zeitpunkten
+	// Calculate difference between normalized dates
 	diff := normalizedDate2.Sub(normalizedDate1)
 
-	// Konvertiere die Differenz in Tage
+	// Convert difference into days
 	days := int16(diff.Hours() / 24)
 
 	return days

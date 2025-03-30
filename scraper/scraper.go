@@ -24,6 +24,7 @@ func NewOllamaWeb(modelName string) *OllamaWeb {
 }
 
 func (ow *OllamaWeb) fetchWebPage() {
+
 	// Request the HTML page.
 	res, err := http.Get(ow.URL)
 	if err != nil {
@@ -46,18 +47,18 @@ func (ow *OllamaWeb) fetchWebPage() {
 
 func (ow *OllamaWeb) GetModelInfo() {
 
-	// Hole die Webseite
 	if ow.doc == nil {
 		ow.fetchWebPage()
 	}
 
-	// Wähle das gewünschte div-Element und extrahiere die Paragraphen
+	// Extract data from DOM tree
 	var paragraphs []string
 	ow.doc.Find("#file-explorer section div div div p").Each(func(index int, item *goquery.Selection) {
 		text := strings.TrimSpace(item.Text())
 		paragraphs = append(paragraphs, text)
 	})
 
+	// Format and store extracted values
 	ow.Digest = paragraphs[2][:12]
 	date, _ := datetools.ParseRelativeDate(paragraphs[0])
 	ow.Days = datetools.DaysDifference(date, time.Now())

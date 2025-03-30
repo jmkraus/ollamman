@@ -1,6 +1,6 @@
 package markdown
 
-//Creates a markdown table from a list of lists - converted Go version from Python original
+// Creates a markdown table from a list of lists
 
 import (
 	"fmt"
@@ -9,17 +9,12 @@ import (
 
 func MarkdownTable(tabledata [][]string) string {
 
-	reduceColNum := 4 //reduce by -1
-
 	numColumns := len(tabledata[0])
+	reduceColNum := numColumns - 1 //reduce width of this col by -1
 	border := "|"
 	for range numColumns {
 		border += " %s |"
 	}
-	// border := "|" + " %s |"
-	// for i := 1; i < numColumns; i++ {
-	// 	border += " %s |"
-	// }
 
 	maxWidths := make([]int, numColumns)
 	separator := make([]string, numColumns)

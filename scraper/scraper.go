@@ -25,7 +25,7 @@ func NewOllamaWeb(modelName string) *OllamaWeb {
 
 func (ow *OllamaWeb) fetchWebPage() {
 
-	// Request the HTML page.
+	// Request the HTML page
 	res, err := http.Get(ow.URL)
 	if err != nil {
 		log.Fatal(err)
@@ -47,6 +47,7 @@ func (ow *OllamaWeb) fetchWebPage() {
 
 func (ow *OllamaWeb) GetModelInfo() {
 
+	// Only fetch if not yet done
 	if ow.doc == nil {
 		ow.fetchWebPage()
 	}

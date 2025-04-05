@@ -32,10 +32,20 @@ func main() {
 	//
 	// 4. No update check done
 	//    - ⚪ : `\U000026AA`
+	// symbols := []string{"  \U00002705", "  \U0001F536", "  \U0000274C", "  \U000026AA"}
 
-	symbols := []string{"  \U00002705", "  \U0001F536", "  \U0000274C", "  \U000026AA"}
+	// Weißes Häkchen auf grünem Grund (Neueste Version)
+	checkMarkGreen := "\033[42m\033[97m \u2713 \033[0m"
+	// Schwarzes Ausrufezeichen auf gelbem Grund (Update verfügbar)
+	exclamationYellow := "\033[43m\033[30m \u0021 \033[0m"
+	// Rotes X ohne Hintergrundfarbe (Datei nicht gefunden)
+	redX := "\033[91m \u2717 \033[0m"
+	// Neutrales Symbol (keine Update-Prüfung) - grauer Kreis
+	grayCircle := "\033[90m \u25CB \033[0m"
+	asciiSymbols := []string{checkMarkGreen, exclamationYellow, redX, grayCircle}
+
 	list := [][]string{
-		{"NAME", "ID", "SIZE", "MODIFIED", "UPDATE"},
+		{"NAME", "ID", "SIZE", "MODIFIED", "+UPD"},
 	}
 
 	// Initialize flag
@@ -70,26 +80,45 @@ func main() {
 	// Iterate over models in ListResponse
 	for _, model := range modelsPtr.Models {
 
+		if 1 == 0 {
+			info, err := func() (*api.ShowResponse, error) {
+				showReq := &api.ShowRequest{Name: model.Name}
+				info, err := client.Show(ctx, showReq)
+				return info, err
+			}()
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			fmt.Printf("%v\n", info.Capabilities)
+		}
+
 		digest := model.Digest[:12]
-		status := symbols[0]
+		status := asciiSymbols[0]
+
+		// Calc day diff
+		daysDiff := datetools.DaysDifference(model.ModifiedAt, time.Now())
 
 		if *chkUpdates {
 			// Get details from web page by model name
 			ow := scraper.NewOllamaWeb(model.Name)
-			ow.GetModelInfo()
-
-			// Compare ID and last modified date
-			days := datetools.DaysDifference(model.ModifiedAt, time.Now())
-			if (days > ow.Days) || (digest != ow.Digest) {
-				status = symbols[1] // update found
+			err := ow.GetModelInfo()
+			if err != nil {
+				status = asciiSymbols[2]
+			} else {
+				// Compare ID and last modified date
+				if (daysDiff > ow.Days) || (digest != ow.Digest) {
+					status = asciiSymbols[1] // update found
+				}
+				// fmt.Printf("Details: %+v\n\n", model.Details)
 			}
-			// fmt.Printf("Details: %+v\n\n", model.Details)
 		} else {
-			status = symbols[3]
+			status = asciiSymbols[3]
 		}
 
 		// Write table entry
-		entry := []string{model.Name, digest, formatbytes.FormatBytes(model.Size), model.ModifiedAt.Format(time.RFC3339), status}
+		modified := fmt.Sprintf("%s (%dd)", model.ModifiedAt.Format("02-01-2006"), daysDiff)
+		entry := []string{model.Name, digest, formatbytes.FormatBytes(model.Size), modified, status}
 		list = append(list, entry)
 	}
 

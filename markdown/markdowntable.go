@@ -10,30 +10,45 @@ import (
 func MarkdownTable(tabledata [][]string) string {
 
 	numColumns := len(tabledata[0])
-	reduceColNum := numColumns - 1 //reduce width of this col by -1
 	border := "|"
 	for range numColumns {
 		border += " %s |"
 	}
 
+	// define variables
 	maxWidths := make([]int, numColumns)
+	fixWidths := make([]int, numColumns)
 	separator := make([]string, numColumns)
 	for i := range numColumns {
 		separator[i] = "---"
 	}
 
+	// create heading separator row
 	tabledata = append(tabledata, []string{})
 	copy(tabledata[1:], tabledata)
 	tabledata[1] = separator
 
+	// identify fix widths (heading is prefixed with a "+")
+	for idx, col := range tabledata[0] {
+		if strings.HasPrefix(col, "+") {
+			fixWidths[idx] = len(col) - 1
+			tabledata[0][idx] = col[1:]
+		} else {
+			fixWidths[idx] = 0
+		}
+	}
+
+	// identify max widths
 	for _, row := range tabledata {
 		for cIdx, col := range row {
 			if len(col) > maxWidths[cIdx] {
 				maxWidths[cIdx] = len(col)
 			}
+			if fixWidths[cIdx] != 0 {
+				maxWidths[cIdx] = fixWidths[cIdx]
+			}
 		}
 	}
-	maxWidths[reduceColNum]--
 
 	for rIdx, row := range tabledata {
 		fill := " "
@@ -41,11 +56,7 @@ func MarkdownTable(tabledata [][]string) string {
 			fill = "-"
 		}
 		for cIdx, col := range row {
-			mw := maxWidths[cIdx]
-			if rIdx == 1 && cIdx == reduceColNum {
-				mw++
-			}
-			tabledata[rIdx][cIdx] = fmt.Sprintf("%-"+fmt.Sprint(mw)+"s", col)
+			tabledata[rIdx][cIdx] = fmt.Sprintf("%-"+fmt.Sprint(maxWidths[cIdx])+"s", col)
 			tabledata[rIdx][cIdx] = strings.Replace(tabledata[rIdx][cIdx], " ", fill, -1)
 		}
 	}

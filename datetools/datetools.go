@@ -6,33 +6,47 @@ import (
 	"time"
 )
 
+var now = func() time.Time {
+	return time.Now()
+}
+
 func ParseRelativeDate(dateString string) (time.Time, bool) {
 	patterns := map[string]string{
-		"days":   `(\d+)\s+days?\s+ago`,
-		"weeks":  `(\d+)\s+weeks?\s+ago`,
-		"months": `(\d+)\s+months?\s+ago`,
+		"days":      `(\d+)\s+days?\s+ago`,
+		"weeks":     `(\d+)\s+weeks?\s+ago`,
+		"months":    `(\d+)\s+months?\s+ago`,
+		"yesterday": `^yesterday$`,
 	}
 
 	for unit, pattern := range patterns {
 		re := regexp.MustCompile(pattern)
 		matches := re.FindStringSubmatch(dateString)
 
-		if len(matches) > 1 {
-			value, err := strconv.Atoi(matches[1])
-			if err != nil {
-				continue
-			}
-
-			today := time.Now()
+		if len(matches) > 0 {
+			today := now()
 			var pastDate time.Time
 
 			switch unit {
 			case "days":
+				value, err := strconv.Atoi(matches[1])
+				if err != nil {
+					continue
+				}
 				pastDate = today.AddDate(0, 0, -value)
 			case "weeks":
+				value, err := strconv.Atoi(matches[1])
+				if err != nil {
+					continue
+				}
 				pastDate = today.AddDate(0, 0, -value*7)
 			case "months":
+				value, err := strconv.Atoi(matches[1])
+				if err != nil {
+					continue
+				}
 				pastDate = today.AddDate(0, -value, 0)
+			case "yesterday":
+				pastDate = today.AddDate(0, 0, -1)
 			}
 
 			return pastDate, true

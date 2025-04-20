@@ -65,6 +65,5 @@ func (ow *OllamaWeb) GetModelInfo() error {
 	ow.Digest = paragraphs[2][:12]
 	date, _ := datetools.ParseRelativeDate(paragraphs[0])
 	ow.Days = datetools.DaysDifference(date, time.Now())
-
 	return nil
 }

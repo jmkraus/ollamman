@@ -22,18 +22,19 @@ var chkUpdates = pflag.BoolP("check-updates", "c", false, "Check models for upda
 func main() {
 
 	// Green checkmark (ok, nothing to do)
-	greenCheckMark := "\033[42m\033[97m \u2713 \033[0m"
+	//const greenCheckMark = "\033[42m\033[97m \u2713 \033[0m"
+	const greenCheckMark = "\033[42;97m \u2714 \033[0m"
 	// Yellow exclamation mark (update available)
-	yellowExclamation := "\033[43m\033[30m \u0021 \033[0m"
+	//const yellowExclamation = "\033[43m\033[30m \u0021 \033[0m"
+	const yellowExclamation = "\033[43;30m \u26A0 \033[0m"
 	// Red X (web site not found)
-	redX := "\033[91m \u2717 \033[0m"
+	const redX = "\033[91m \u2717 \033[0m"
 	// Gray circle (no update check)
-	grayCircle := "\033[90m \u25CB \033[0m"
-	asciiSymbols := []string{greenCheckMark, yellowExclamation, redX, grayCircle}
+	const grayCircle = "\033[90m \u25CB \033[0m"
 
 	// Define table headers
 	list := [][]string{
-		{"NAME", "ID", "SIZE", "MODIFIED", "+UPD"},
+		{"NAME", "ID", "SIZE", "MODIFIED", "CAPABILITIES", "+UPD"},
 	}
 
 	// Initialize pflag
@@ -66,21 +67,20 @@ func main() {
 	// Iterate over models in ListResponse
 	for _, model := range modelsPtr.Models {
 
-		if 1 == 0 {
-			info, err := func() (*api.ShowResponse, error) {
-				showReq := &api.ShowRequest{Name: model.Name}
-				info, err := client.Show(ctx, showReq)
-				return info, err
-			}()
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			fmt.Printf("%v\n", info.Capabilities)
+		capabilities := ""
+		info, err := func() (*api.ShowResponse, error) {
+			showReq := &api.ShowRequest{Name: model.Name}
+			info, err := client.Show(ctx, showReq)
+			return info, err
+		}()
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			capabilities = fmt.Sprintf("%v", info.Capabilities)
 		}
 
 		digest := model.Digest[:12]
-		status := asciiSymbols[0] // all ok
+		status := greenCheckMark // all ok
 
 		// Calc day diff
 		daysDiff := datetools.DaysDifference(model.ModifiedAt, time.Now())
@@ -91,19 +91,19 @@ func main() {
 			ow := scraper.NewOllamaWeb(model.Name)
 			err := ow.GetModelInfo()
 			if err != nil {
-				status = asciiSymbols[2] // error occured
+				status = redX // error occured
 			} else {
 				// Compare ID and last modified date
-				if (daysDiff > ow.Days) || (digest != ow.Digest) {
-					status = asciiSymbols[1] // update found
+				if digest != ow.Digest {
+					status = yellowExclamation // update found
 				}
 			}
 		} else {
-			status = asciiSymbols[3] // nothing done
+			status = grayCircle // nothing done
 		}
 
 		// Write table entry
-		entry := []string{model.Name, digest, formatbytes.FormatBytes(model.Size), modified, status}
+		entry := []string{model.Name, digest, formatbytes.FormatBytes(model.Size), modified, capabilities, status}
 		list = append(list, entry)
 	}
 
